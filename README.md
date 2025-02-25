@@ -1,7 +1,9 @@
 🚖 Uber Clone Project
+
 This is a containerized Uber Clone application deployed on Amazon EKS using Terraform for infrastructure management and Kubernetes manifests for application deployment. It features a microservices architecture with separate frontend and backend services, all managed using Docker containers and ECR (Elastic Container Registry).
 
 🎯 Project Overview
+
 This project showcases the deployment of a full-stack Uber Clone application using:
 
 Docker for containerization of frontend and backend services.
@@ -29,6 +31,7 @@ SonarQube for code quality analysis.
 
 
 🛠️ Tech Stack
+
 Frontend: ReactJS, Vite, Nginx
 Backend: Node.js, Express, MongoDB, Socket.io
 Containerization: Docker, Docker Compose
@@ -40,6 +43,7 @@ Security Scans: OWASP Dependency Check, Trivy
 Monitoring and Observability: Prometheus, Grafana (Planned)
 
 🚀 Features
+
 🚗 Ride Booking System: Similar to Uber's core functionality.
 🔑 User Authentication: Secure login and signup.
 📊 Real-time Updates: Using Socket.io for live updates.
@@ -50,6 +54,7 @@ Monitoring and Observability: Prometheus, Grafana (Planned)
 
 
 🌐 Infrastructure Setup
+
 Using Terraform:
 ECR: To store Docker images.
 VPC: Custom VPC with public and private subnets.
@@ -62,6 +67,7 @@ EKS Module: modules/eks
 IAM Module: modules/iam
 
 📦 Application Deployment
+
 Using Kubernetes Manifests:
 Namespace: namespace.yaml - for logical separation.
 Deployments:
@@ -74,6 +80,7 @@ Frontend Service: frontend-service.yaml (LoadBalancer)
 MongoDB Service: mongo-service.yaml
 
 🔄 CI/CD Pipeline
+
 Using Jenkins:
 Pipeline-as-Code: Using Jenkinsfiles for both frontend and backend.
 SonarQube Analysis: Integrated for code quality and security analysis.
@@ -82,6 +89,7 @@ Docker Image Build and Push to ECR for both frontend and backend.
 Automated Deployment to EKS using updated Kubernetes manifests.
 
 📁 Jenkins Pipeline Structure:
+
 Backend Jenkinsfile:
 SonarQube Analysis for code quality.
 OWASP Dependency Check for security vulnerabilities.
@@ -93,10 +101,12 @@ Frontend Jenkinsfile:
 Similar stages as backend but tailored for frontend service.
 
 📂 Jenkinsfile Locations:
+
 Jenkinsfile-backend: In ./backend/Jenkinsfile
 Jenkinsfile-frontend: In ./frontend/Jenkinsfile
 
 🔍 Code Quality and Security
+
 Using SonarQube:
 Integrated with Jenkins pipeline.
 Analyzes:
@@ -112,12 +122,14 @@ File System Scans for vulnerabilities in source code.
 Docker Image Scans for container security before pushing to ECR.
 
 📊 Observability
+
 Planned Integrations:
 Prometheus for metrics collection.
 Grafana for monitoring and dashboards.
 EFK Stack for centralized logging.
 
 ✅ Prerequisites
+
 AWS Account with Administrator Access
 Terraform (v1.0 or higher)
 Kubectl (compatible with EKS version)
@@ -133,6 +145,7 @@ SonarQube Server for code analysis
 Git for version control
 
 ⚙️ Installation and Setup
+
 1. Clone the Repository:
 
 git clone https://github.com/Shahab0990/Terraform-k8s.git
@@ -175,9 +188,7 @@ kubectl apply -f backend-deployment.yaml
 kubectl apply -f frontend-deployment.yaml
 
 🚀 Usage
-bash
-Copy
-Edit
+
 kubectl get svc -n uber-clone
 
 🤝 Contributing
