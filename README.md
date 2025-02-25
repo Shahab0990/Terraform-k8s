@@ -7,13 +7,21 @@ This is a containerized Uber Clone application deployed on Amazon EKS using Terr
 This project showcases the deployment of a full-stack Uber Clone application using:
 
 Docker for containerization of frontend and backend services.
+
 ECR (Elastic Container Registry) for storing container images.
+
 EKS (Elastic Kubernetes Service) for managing Kubernetes clusters.
+
 Terraform for Infrastructure as Code (IaC).
+
 Kubernetes Manifests for deploying microservices architecture.
+
 Jenkins CI/CD Pipeline for automated builds, testing, security scans, and deployments.
+
 SonarQube for code quality analysis.
+
 OWASP Dependency Check and Trivy for security scans.
+
 The goal is to automate the deployment and management process as much as possible, showcasing advanced DevOps practices for CI/CD, security, observability, and scalability.
 
 🏛️ Architecture
@@ -33,13 +41,21 @@ SonarQube for code quality analysis.
 🛠️ Tech Stack
 
 Frontend: ReactJS, Vite, Nginx
+
 Backend: Node.js, Express, MongoDB, Socket.io
+
 Containerization: Docker, Docker Compose
+
 Infrastructure as Code: Terraform
+
 Container Orchestration: Kubernetes (EKS)
+
 CI/CD Pipeline: Jenkins
+
 Code Quality: SonarQube
+
 Security Scans: OWASP Dependency Check, Trivy
+
 Monitoring and Observability: Prometheus, Grafana (Planned)
 
 🚀 Features
