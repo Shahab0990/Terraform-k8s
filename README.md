@@ -45,11 +45,17 @@ Monitoring and Observability: Prometheus, Grafana (Planned)
 🚀 Features
 
 🚗 Ride Booking System: Similar to Uber's core functionality.
+
 🔑 User Authentication: Secure login and signup.
+
 📊 Real-time Updates: Using Socket.io for live updates.
+
 🔄 CI/CD Automation: For building, testing, and deploying code.
+
 🔍 Code Quality and Security Checks: Using SonarQube, OWASP, and Trivy.
+
 📡 Scalable Architecture: Deployed on AWS EKS.
+
 📈 Observability: Planned integration with Prometheus and Grafana.
 
 
@@ -57,13 +63,19 @@ Monitoring and Observability: Prometheus, Grafana (Planned)
 
 Using Terraform:
 ECR: To store Docker images.
+
 VPC: Custom VPC with public and private subnets.
+
 EKS Cluster: Managed Kubernetes cluster with node groups.
+
 IAM Roles: For EKS cluster and nodes with appropriate permissions.
+
 
 Terraform Modules Used:
 VPC Module: modules/vpc
+
 EKS Module: modules/eks
+
 IAM Module: modules/iam
 
 📦 Application Deployment
@@ -71,12 +83,19 @@ IAM Module: modules/iam
 Using Kubernetes Manifests:
 Namespace: namespace.yaml - for logical separation.
 Deployments:
+
 backend-deployment.yaml
+
 frontend-deployment.yaml
+
 mongo-deployment.yaml
+
 Services:
+
 Backend Service: backend-service.yaml
+
 Frontend Service: frontend-service.yaml (LoadBalancer)
+
 MongoDB Service: mongo-service.yaml
 
 🔄 CI/CD Pipeline
