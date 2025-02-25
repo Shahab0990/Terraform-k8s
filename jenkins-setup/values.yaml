@@ -1,0 +1,8 @@
+controller:
+  persistence:
+    enabled: true
+    storageClass: "gp2" # Use the EBS storage class
+    size: 20Gi # Specify the size of the volume
+  service:
+    type: LoadBalancer
+    port: 8080
