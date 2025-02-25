@@ -1,0 +1,84 @@
+pipeline {
+    agent any
+    environment {
+        AWS_REGION = 'us-east-1'
+        CLUSTER_NAME = 'uber-clone-cluster'
+    }
+    parameters {
+        choice(
+            choices: ['plan', 'apply', 'destroy'], 
+            name: 'Terraform_Action'
+        )
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Shahab0990/Terraform-k8s.git'
+            }
+        }
+        stage('Init') {
+            steps {
+                withAWS(credentials: 'aws-creds', region: "${AWS_REGION}") {
+                    sh 'terraform init'
+                }
+            }
+        }
+        stage('Validate') {
+            steps {
+                withAWS(credentials: 'aws-creds', region: "${AWS_REGION}") {
+                    sh 'terraform validate'
+                }
+            }
+        }
+        stage('Plan') {
+            when {
+                expression { return params.Terraform_Action == 'plan' }
+            }
+            steps {
+                withAWS(credentials: 'aws-creds', region: "${AWS_REGION}") {
+                    sh 'terraform plan'
+                }
+            }
+        }
+        stage('Apply') {
+            when {
+                expression { return params.Terraform_Action == 'apply' }
+            }
+            steps {
+                withAWS(credentials: 'aws-creds', region: "${AWS_REGION}") {
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
+        stage('Destroy') {
+            when {
+                expression { return params.Terraform_Action == 'destroy' }
+            }
+            steps {
+                withAWS(credentials: 'aws-creds', region: "${AWS_REGION}") {
+                    sh 'terraform destroy -auto-approve'
+                }
+            }
+        }
+        stage('Configure kubectl') {
+            when {
+                expression { return params.Terraform_Action == 'apply' }
+            }
+            steps {
+                script {
+                    withAWS(credentials: 'aws-creds', region: "${AWS_REGION}") {
+                        sh """
+                            aws eks --region ${AWS_REGION} update-kubeconfig --name ${CLUSTER_NAME}
+                            kubectl get nodes
+                        """
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}

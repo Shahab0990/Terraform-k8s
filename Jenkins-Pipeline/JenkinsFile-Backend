@@ -1,0 +1,153 @@
+pipeline {
+    agent any 
+    tools {
+        jdk 'jdk'
+        nodejs 'nodejs'
+    }
+    environment  {
+        SCANNER_HOME=tool 'sonar-scanner'
+        AWS_ACCOUNT_ID = credentials('ACCOUNT_ID')
+        AWS_ECR_REPO_NAME = 'uber-clone'
+        AWS_DEFAULT_REGION = 'us-east-1'
+        REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${AWS_ECR_REPO_NAME}"
+    }
+    stages {
+        stage('Cleaning Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Checkout from Git') {
+            steps {
+                git credentialsId: 'GITHUB', url: 'https://github.com/Shahab0990/Terraform-k8s.git'
+            }
+        }
+        stage('Sonarqube Analysis') {
+            steps {
+                dir('backend') {
+                    withSonarQubeEnv('sonar-server') {
+                        sh ''' $SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectName=uber-clone-backend \
+                        -Dsonar.projectKey=uber-clone-backend '''
+                    }
+                }
+            }
+        }
+        stage('Quality Check') {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
+                }
+            }
+        }
+        stage('OWASP Dependency-Check Scan') {
+            steps {
+                dir('backend') {
+                    dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                }
+            }
+        }
+        stage('Trivy File Scan') {
+            steps {
+                dir('backend') {
+                    sh 'trivy fs . > trivyfs.txt'
+                }
+            }
+        }
+        stage("Docker Image Build - Backend") {
+            steps {
+                script {
+                    dir('backend') {
+                        sh 'docker system prune -f'
+                        sh 'docker container prune -f'
+                        sh 'docker build -t ${AWS_ECR_REPO_NAME}-backend:${BUILD_NUMBER} .'
+                    }
+                }
+            }
+        }
+        stage("Docker Image Build - Frontend") {
+            steps {
+                script {
+                    dir('frontend') {
+                        sh 'docker system prune -f'
+                        sh 'docker container prune -f'
+                        sh 'docker build -t ${AWS_ECR_REPO_NAME}-frontend:${BUILD_NUMBER} .'
+                    }
+                }
+            }
+        }
+        stage("ECR Image Pushing - Backend") {
+            steps {
+                script {
+                    sh 'aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}'
+                    sh 'docker tag ${AWS_ECR_REPO_NAME}-backend:${BUILD_NUMBER} ${REPOSITORY_URI}-backend:${BUILD_NUMBER}'
+                    sh 'docker push ${REPOSITORY_URI}-backend:${BUILD_NUMBER}'
+                }
+            }
+        }
+        stage("ECR Image Pushing - Frontend") {
+            steps {
+                script {
+                    sh 'aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}'
+                    sh 'docker tag ${AWS_ECR_REPO_NAME}-frontend:${BUILD_NUMBER} ${REPOSITORY_URI}-frontend:${BUILD_NUMBER}'
+                    sh 'docker push ${REPOSITORY_URI}-frontend:${BUILD_NUMBER}'
+                }
+            }
+        }
+        stage("TRIVY Image Scan - Backend") {
+            steps {
+                sh 'trivy image ${REPOSITORY_URI}-backend:${BUILD_NUMBER} > trivyimage-backend.txt' 
+            }
+        }
+        stage("TRIVY Image Scan - Frontend") {
+            steps {
+                sh 'trivy image ${REPOSITORY_URI}-frontend:${BUILD_NUMBER} > trivyimage-frontend.txt' 
+            }
+        }
+        stage('Update Deployment File - Backend') {
+            environment {
+                GIT_REPO_NAME = "Terraform-k8s"
+                GIT_USER_NAME = "Shahab0990"
+            }
+            steps {
+                dir('kubernetes/backend') {
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            git config user.email "smsakelvi@gmail.com"
+                            git config user.name "Shahab0990"
+                            BUILD_NUMBER=${BUILD_NUMBER}
+                            imageTag=$(grep -oP '(?<=backend:)[^ ]+' deployment.yaml)
+                            sed -i "s/${AWS_ECR_REPO_NAME}-backend:${imageTag}/${AWS_ECR_REPO_NAME}-backend:${BUILD_NUMBER}/" deployment.yaml
+                            git add deployment.yaml
+                            git commit -m "Update backend image to version \${BUILD_NUMBER}"
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Update Deployment File - Frontend') {
+            environment {
+                GIT_REPO_NAME = "Terraform-k8s"
+                GIT_USER_NAME = "Shahab0990"
+            }
+            steps {
+                dir('kubernetes/frontend') {
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            git config user.email "smsakelvi@gmail.com"
+                            git config user.name "Shahab0990"
+                            BUILD_NUMBER=${BUILD_NUMBER}
+                            imageTag=$(grep -oP '(?<=frontend:)[^ ]+' deployment.yaml)
+                            sed -i "s/${AWS_ECR_REPO_NAME}-frontend:${imageTag}/${AWS_ECR_REPO_NAME}-frontend:${BUILD_NUMBER}/" deployment.yaml
+                            git add deployment.yaml
+                            git commit -m "Update frontend image to version \${BUILD_NUMBER}"
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                        '''
+                    }
+                }
+            }
+        }
+    }
+}
